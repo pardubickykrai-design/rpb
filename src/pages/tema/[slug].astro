@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import Pripravujeme from '../../components/Pripravujeme.astro';
+
+export async function getStaticPaths() {
+  const temata = await getCollection('temata');
+  return temata.map((tema) => ({ params: { slug: tema.id }, props: { tema } }));
+}
+const { tema } = Astro.props;
+---
+<Pripravujeme titulek={tema.data.nazev} faze="fáze 3">
+  <p>Stránka tématu s projekty a dalšími řešenými oblastmi vznikne ve fázi 3.</p>
+</Pripravujeme>

@@ -1,0 +1,34 @@
+---
+// Znak loga: schodiště pěti čtverců a čtvrtkruh nahoře (identita v3, 8.1).
+// varianta: plna (červená + modrá), bila (na tmavém nebo červeném poli), tematicka (dílek = téma),
+// aktualni (barva textu okolí). zvyraznit: číslo tématu, jehož dílek zůstane plný, ostatní se ztlumí.
+interface Props {
+  varianta?: 'plna' | 'bila' | 'bila-cervena' | 'tematicka' | 'aktualni';
+  velikost?: number;
+  zvyraznit?: number;
+}
+const { varianta = 'plna', velikost = 36, zvyraznit } = Astro.props;
+const pruhlednost = (cislo: number) => (zvyraznit && zvyraznit !== cislo ? 0.22 : 1);
+
+// Pořadí dílků odpovídá číslům témat 1 až 6.
+const dilky = [
+  { x: 0, y: 36 },
+  { x: 18, y: 36 },
+  { x: 36, y: 36 },
+  { x: 18, y: 18 },
+  { x: 36, y: 18 },
+];
+const tematicke = ['#2E7D4F', '#D99A12', '#D9701F', '#7445A8', '#1F7F89', '#B53D74'];
+
+const barvy = {
+  plna: { ctverce: Array(5).fill('#C8102E'), oblouk: '#3862AA' },
+  bila: { ctverce: Array(5).fill('#FFFFFF'), oblouk: '#FFFFFF' },
+  'bila-cervena': { ctverce: Array(5).fill('#FFFFFF'), oblouk: '#C8102E' },
+  tematicka: { ctverce: tematicke.slice(0, 5), oblouk: tematicke[5] },
+  aktualni: { ctverce: Array(5).fill('currentColor'), oblouk: 'currentColor' },
+}[varianta];
+---
+<svg width={velikost} height={velikost} viewBox="0 0 50 50" aria-hidden="true" focusable="false">
+  {dilky.map((d, i) => <rect x={d.x} y={d.y} width="14" height="14" rx="2" fill={barvy.ctverce[i]} fill-opacity={pruhlednost(i + 1)} />)}
+  <path d="M36 14 V0 A14 14 0 0 1 50 14 Z" fill={barvy.oblouk} fill-opacity={pruhlednost(6)} />
+</svg>

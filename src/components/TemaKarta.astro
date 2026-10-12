@@ -1,0 +1,111 @@
+---
+// Karta tématu se seznamem projektů a oblastí (identita v3, stránka Témata).
+import Znak from './Znak.astro';
+import { sklonuj, textNaPlose, zobrazovanyNazev, type TemaSPolozkami } from '../lib/obsah';
+
+interface Props {
+  polozka: TemaSPolozkami;
+}
+const { tema, projekty, oblasti } = Astro.props.polozka;
+const naPlose = textNaPlose(tema);
+---
+<article class="karta" style={`--plocha:${tema.data.barva_plocha};--barva:${tema.data.barva};--na-plose:${naPlose}`}>
+  <a href={`/tema/${tema.id}/`} class="karta__hlava">
+    <span class="karta__horni">
+      <span class="karta__cislo" aria-hidden="true">{tema.data.cislo}</span>
+      <Znak varianta="aktualni" velikost={56} zvyraznit={tema.data.cislo} />
+    </span>
+    <h3 class="karta__nazev">{tema.data.nazev}</h3>
+    <span class="karta__pocty">
+      {projekty.length > 0 && <span>{sklonuj(projekty.length, ['projekt', 'projekty', 'projektů'])}</span>}
+      {oblasti.length > 0 && <span>{sklonuj(oblasti.length, ['oblast', 'oblasti', 'oblastí'])}</span>}
+    </span>
+  </a>
+  <div class="karta__telo">
+    {projekty.length > 0 && (
+      <div class="skupina">
+        <h4 class="skupina__titulek">Neinvestiční projekty</h4>
+        <ul>
+          {projekty.map((p) => <li class="plny"><a href={`/projekty/${p.id}/`}>{zobrazovanyNazev(p)}</a></li>)}
+        </ul>
+      </div>
+    )}
+    {oblasti.length > 0 && (
+      <div class="skupina">
+        <h4 class="skupina__titulek">Další řešené oblasti</h4>
+        <ul>
+          {oblasti.map((p) => <li class="obrys"><a href={`/projekty/${p.id}/`}>{zobrazovanyNazev(p)}</a></li>)}
+        </ul>
+      </div>
+    )}
+  </div>
+</article>
+
+<style>
+  .karta {
+    display: flex;
+    flex-direction: column;
+    background: var(--bila);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .karta:hover { transform: translateY(-4px); box-shadow: var(--stin-hover); }
+  .karta__hlava {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 230px;
+    padding: 24px;
+    background: var(--plocha);
+    color: var(--na-plose);
+  }
+  .karta__horni { display: flex; justify-content: space-between; align-items: flex-start; }
+  .karta__cislo {
+    font: 800 76px/0.8 var(--font-titulky);
+    font-stretch: 115%;
+    letter-spacing: -0.03em;
+  }
+  .karta__nazev {
+    font-size: 26px;
+    line-height: 1.05;
+    font-stretch: 110%;
+    letter-spacing: -0.01em;
+  }
+  .karta__pocty { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+  .karta__pocty span {
+    padding: 5px 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 999px;
+    font: 700 12px/1.2 var(--font-text);
+  }
+  .karta__telo {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px 24px 26px;
+  }
+  .skupina + .skupina { padding-top: 12px; border-top: 1px solid var(--linka); }
+  .skupina__titulek {
+    margin-bottom: 7px;
+    font: 700 11px/1.3 var(--font-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .skupina ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .skupina li { display: flex; gap: 10px; align-items: baseline; }
+  .skupina li::before {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    transform: translateY(-1px);
+  }
+  .skupina li.plny::before { background: var(--barva); }
+  .skupina li.obrys::before { border: 2px solid var(--barva); }
+  .skupina a { padding: 3px 0; font: 600 15px/1.35 var(--font-text); }
+  .skupina li.obrys a { font-weight: 500; color: #2C3A5E; }
+  .skupina a:hover { color: var(--cervena); text-decoration: underline; }
+</style>

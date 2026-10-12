@@ -1,0 +1,74 @@
+---
+import Znak from './Znak.astro';
+
+const odkazy = [
+  { nazev: 'Témata', href: '/temata/' },
+  { nazev: 'Projekty', href: '/projekty/' },
+  { nazev: 'Instituce', href: '/organizace/' },
+  { nazev: 'Mapa vazeb', href: '/mapa-vazeb/' },
+  { nazev: 'O iniciativě', href: '/o-iniciative/' },
+  { nazev: 'Zdroje', href: '/zdroje/' },
+  { nazev: 'Kontakty', href: '/kontakty/' },
+  { nazev: 'Prohlášení o přístupnosti', href: '/pristupnost/' },
+];
+---
+<footer class="paticka">
+  <div class="obal paticka__mrizka">
+    <div class="paticka__znacka">
+      <a href="/" class="paticka__logo">
+        <Znak varianta="bila-cervena" velikost={28} />
+        <span><strong>Region příležitostí a budoucnosti</strong> · iniciativa Pardubického kraje</span>
+      </a>
+      <p class="paticka__pozn">
+        Web představuje výběr aktivit a projektů krajských i partnerských institucí, nikoli úplný přehled všech
+        neinvestičních projektů v Pardubickém kraji. Údaje vycházejí z publikace Region příležitostí a budoucnosti (2025).
+      </p>
+    </div>
+    <nav aria-label="Odkazy v patičce">
+      <ul>
+        {odkazy.map((o) => <li><a href={o.href}>{o.nazev}</a></li>)}
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .paticka {
+    background: var(--nocni-modra);
+    color: var(--paticka-text);
+    padding-block: 40px;
+    font-size: 14px;
+  }
+  .paticka__mrizka {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .paticka__znacka {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 560px;
+  }
+  .paticka__logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .paticka__logo strong { color: var(--bila); font-weight: 600; }
+  .paticka__pozn { line-height: 1.55; }
+  .paticka ul {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 4px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .paticka nav a {
+    display: inline-block;
+    padding: 6px 0;
+  }
+  .paticka nav a:hover { color: var(--bila); text-decoration: underline; }
+</style>
