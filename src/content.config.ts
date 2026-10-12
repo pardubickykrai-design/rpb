@@ -1,6 +1,6 @@
 // Schéma obsahu webu (MASTER, kapitola 5). Chybné pole v souboru zastaví build.
-import { defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders';
+import { defineCollection, reference } from 'astro:content';
+import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 export const TEMATA = [
@@ -24,7 +24,7 @@ export const CILOVE_SKUPINY = [
 
 // overeno: potvrdila organizace; podklad: převzato z publikace nebo final.docx.
 // Oba stavy se zobrazují. k-overeni a nedolozeno se na web nedostanou (MASTER, kapitola 9).
-const stavOvereni = z.enum(['overeno', 'podklad', 'k-overeni', 'nedolozeno']);
+export const stavOvereni = z.enum(['overeno', 'podklad', 'k-overeni', 'nedolozeno']);
 
 const datum = z.string().regex(/^\d{4}(-\d{2})?$/, 'Použijte formát RRRR nebo RRRR-MM');
 
@@ -40,6 +40,28 @@ const temata = defineCollection({
   }),
 });
 
+const organizace = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/organizace' }),
+  schema: z.object({
+    nazev: z.string(),
+    zkratka: z.string().optional(),
+    // primy-vliv a spolupracujici odpovídají dvěma skupinám v podkladu,
+    // partner-projektu je organizace, která v podkladu figuruje jen u konkrétního projektu.
+    skupina: z.enum(['primy-vliv', 'spolupracujici', 'partner-projektu']),
+    web: z.string().url().optional(),
+    poradi: z.number().default(100),
+  }),
+});
+
+// Číselník zdrojů financování (filtr v katalogu).
+const financovani = defineCollection({
+  loader: file('./src/content/financovani.yaml'),
+  schema: z.object({
+    nazev: z.string(),
+    zkratka: z.string().optional(),
+  }),
+});
+
 const projekty = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/projekty' }),
   schema: z.object({
@@ -48,24 +70,30 @@ const projekty = defineCollection({
     tema: z.enum(TEMATA),
     typ: z.enum(['projekt', 'oblast']),
     perex: z.string().max(200).default(''),
+    cil: z.string().optional(),
     cilove_skupiny: z.array(z.enum(CILOVE_SKUPINY)).default([]),
     organizace: z
       .array(
         z.object({
-          id: z.string(),
+          id: reference('organizace'),
           role: z.enum(['vedouci', 'spoluprace-interni', 'spoluprace-externi']),
         }),
       )
       .default([]),
+    // Partneři, kteří nemají vlastní stránku organizace (např. firmy a města s finančním podílem).
+    dalsi_partneri: z.array(z.string()).default([]),
     obdobi: z
       .object({
         zacatek: datum.optional(),
         konec: datum.optional(),
         prubezne: z.boolean().default(false),
+        poznamka: z.string().optional(),
       })
       .optional(),
+    // Ruční přepsání stavu; jinak se dopočítá z období (src/lib/format.ts).
     stav: z.enum(['planovano', 'probiha', 'ukonceno']).optional(),
-    financovani: z.array(z.string()).default([]),
+    financovani: z.array(reference('financovani')).default([]),
+    rozpocet: z.string().optional(),
     nastroje: z.array(z.string()).default([]),
     overeno: z
       .object({
@@ -75,9 +103,11 @@ const projekty = defineCollection({
         vysledky: stavOvereni.default('podklad'),
       })
       .default({ popis: 'podklad', harmonogram: 'podklad', financovani: 'podklad', vysledky: 'podklad' }),
+    // Interní poznámky ke kontrole; na web se nezobrazují.
+    k_overeni: z.array(z.string()).default([]),
     aktualizovano: z.string().optional(),
     poradi: z.number().default(100),
   }),
 });
 
-export const collections = { temata, projekty };
+export const collections = { temata, organizace, financovani, projekty };

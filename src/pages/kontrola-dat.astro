@@ -1,0 +1,131 @@
+---
+// Interní přehled všech dat ke kontrole (fáze 2). Před spuštěním webu se stránka odstraní.
+import { getCollection, getEntry, render } from 'astro:content';
+import Zaklad from '../layouts/Zaklad.astro';
+import { nactiTemata } from '../lib/obsah';
+import { CILOVE_SKUPINY_NAZEV, ROLE_NAZEV, STAV_NAZEV, obdobiSlovy, stavProjektu } from '../lib/format';
+
+const temata = await nactiTemata();
+const organizace = (await getCollection('organizace')).sort((a, b) => a.data.poradi - b.data.poradi);
+const financovani = await getCollection('financovani');
+const nazevFin = (id: string) => {
+  const f = financovani.find((x) => x.id === id);
+  return f ? (f.data.zkratka ?? f.data.nazev) : id;
+};
+const nazevOrg = (id: string) => {
+  const o = organizace.find((x) => x.id === id);
+  return o ? (o.data.zkratka ?? o.data.nazev) : id;
+};
+
+const radky = await Promise.all(
+  temata.flatMap((t) =>
+    [...t.projekty, ...t.oblasti].map(async (p) => ({ tema: t.tema, p, Obsah: (await render(p)).Content })),
+  ),
+);
+const pocetPoznamek = radky.reduce((s, r) => s + r.p.data.k_overeni.length, 0);
+const skupiny = { 'primy-vliv': 'S přímým vlivem kraje', spolupracujici: 'Spolupracující', 'partner-projektu': 'Partner projektu' };
+---
+<Zaklad titulek="Kontrola dat" noindex>
+  <div class="obal kontrola">
+    <p class="stitek">Fáze 2 · interní stránka</p>
+    <h1>Kontrola dat</h1>
+    <p class="uvod">
+      Všechny údaje převzaté z publikace a z podkladu final.docx (stav „podklad“). Žluté poznámky jsou místa k ověření
+      nebo rozhodnutí a na webu se nezobrazí. Celkem {radky.length} položek, {organizace.length} organizací,
+      {pocetPoznamek} poznámek k ověření. Stav projektu je dopočítaný k dnešnímu dni.
+    </p>
+
+    <nav class="obsah" aria-label="Témata">
+      {temata.map((t) => <a href={`#${t.tema.id}`}>{t.tema.data.cislo}. {t.tema.data.nazev}</a>)}
+      <a href="#organizace">Organizace</a>
+    </nav>
+
+    {temata.map((t) => (
+      <section id={t.tema.id} style={`--barva:${t.tema.data.barva}`}>
+        <h2>{t.tema.data.cislo}. {t.tema.data.nazev}</h2>
+        <p class="tema-uvod">{t.tema.data.uvod}</p>
+        {radky.filter((r) => r.tema.id === t.tema.id).map(({ p, Obsah }) => {
+          const stav = stavProjektu(p);
+          return (
+            <article class="polozka">
+              <header>
+                <span class="typ">{p.data.typ === 'projekt' ? 'Projekt' : 'Oblast'}</span>
+                <h3>{p.data.nazev}</h3>
+                <code>{p.id}.md</code>
+              </header>
+              <dl>
+                <dt>Perex</dt><dd>{p.data.perex} <small>({p.data.perex.length} znaků)</small></dd>
+                {p.data.cil && (<><dt>Cíl</dt><dd>{p.data.cil}</dd></>)}
+                <dt>Období</dt><dd>{obdobiSlovy(p) || '–'}{p.data.obdobi?.poznamka && ` (${p.data.obdobi.poznamka})`}{stav && <span class="stav">{STAV_NAZEV[stav]}</span>}</dd>
+                <dt>Financování</dt><dd>{p.data.financovani.map((f) => nazevFin(f.id)).join(', ') || '–'}{p.data.rozpocet && <><br /><small>{p.data.rozpocet}</small></>}</dd>
+                <dt>Organizace</dt>
+                <dd>
+                  {p.data.organizace.map((o) => `${nazevOrg(o.id.id)} (${ROLE_NAZEV[o.role].toLowerCase()})`).join(', ')}
+                  {p.data.dalsi_partneri.length > 0 && <><br /><small>Další partneři: {p.data.dalsi_partneri.join(', ')}</small></>}
+                </dd>
+                <dt>Cílové skupiny</dt><dd>{p.data.cilove_skupiny.map((c) => CILOVE_SKUPINY_NAZEV[c]).join(', ') || <em>chybí</em>}</dd>
+                <dt>Nástroje</dt><dd>{p.data.nastroje.join(', ') || '–'}</dd>
+              </dl>
+              <div class="telo"><Obsah /></div>
+              {p.data.k_overeni.length > 0 && (
+                <ul class="poznamky">
+                  {p.data.k_overeni.map((k) => <li>{k}</li>)}
+                </ul>
+              )}
+            </article>
+          );
+        })}
+      </section>
+    ))}
+
+    <section id="organizace">
+      <h2>Organizace</h2>
+      <table>
+        <thead><tr><th>Název</th><th>Zkratka</th><th>Skupina</th><th>Web</th><th>Soubor</th></tr></thead>
+        <tbody>
+          {organizace.map((o) => (
+            <tr>
+              <td>{o.data.nazev}</td>
+              <td>{o.data.zkratka ?? '–'}</td>
+              <td>{skupiny[o.data.skupina]}</td>
+              <td>{o.data.web ?? <em>chybí</em>}</td>
+              <td><code>{o.id}.md</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  </div>
+</Zaklad>
+
+<style>
+  .kontrola { display: flex; flex-direction: column; gap: 24px; padding-block: 48px 72px; }
+  h1 { font-size: clamp(36px, 5vw, 56px); }
+  .uvod { max-width: 760px; color: var(--text-perex); }
+  .obsah { display: flex; flex-wrap: wrap; gap: 8px; }
+  .obsah a { padding: 8px 14px; border-radius: 999px; background: var(--bila); font-weight: 600; font-size: 14px; }
+  .obsah a:hover { color: var(--cervena); }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  section h2 { font-size: 32px; margin-top: 24px; padding-left: 14px; border-left: 8px solid var(--barva, var(--nocni-modra)); }
+  .tema-uvod { color: var(--text-perex); }
+  .polozka { background: var(--bila); border-radius: var(--radius); border-top: 4px solid var(--barva); padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .polozka header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
+  .polozka h3 { font-size: 22px; font-stretch: 110%; letter-spacing: -0.01em; }
+  .typ { font: 700 11px var(--font-text); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+  code { font-size: 12px; color: var(--text-2); }
+  dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px 16px; margin: 0; font-size: 15px; }
+  dt { font-weight: 700; color: var(--text-2); }
+  dd { margin: 0; }
+  small { color: var(--text-2); }
+  .stav { margin-left: 10px; padding: 2px 8px; border-radius: 999px; background: var(--papir); font-size: 12px; font-weight: 700; }
+  .telo { font-size: 15px; border-top: 1px solid var(--linka); padding-top: 12px; }
+  .telo :global(h2) { font-size: 16px; font-family: var(--font-text); font-stretch: normal; letter-spacing: 0; margin: 8px 0 4px; }
+  .telo :global(ul) { margin: 0; padding-left: 20px; }
+  .poznamky { margin: 0; padding: 12px 16px 12px 32px; background: #FFF4D6; border-radius: 6px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; background: var(--bila); border-radius: var(--radius); font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--linka); vertical-align: top; }
+  @media (max-width: 640px) {
+    dl { grid-template-columns: 1fr; }
+    table { display: block; overflow-x: auto; }
+  }
+</style>

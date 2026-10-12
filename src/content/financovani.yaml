@@ -1,0 +1,44 @@
+# Číselník zdrojů financování. id se používá v poli financovani u projektů.
+- id: interreg-europe
+  nazev: "Interreg Europe"
+- id: interreg-central-europe
+  nazev: "Interreg Central Europe"
+- id: interreg-cz-pl
+  nazev: "Interreg Česko–Polsko 2021–2027"
+- id: interreg-va-cz-pl
+  nazev: "Interreg V-A Česká republika – Polsko"
+- id: norske-fondy
+  nazev: "Norské fondy"
+- id: sfzp
+  nazev: "Státní fond životního prostředí"
+  zkratka: "SFŽP"
+- id: op-jak
+  nazev: "Operační program Jan Amos Komenský"
+  zkratka: "OP JAK"
+- id: op-tp
+  nazev: "Operační program Technická pomoc"
+  zkratka: "OP TP"
+- id: opz-plus
+  nazev: "Operační program Zaměstnanost plus"
+  zkratka: "OPZ+"
+- id: op-pik
+  nazev: "Operační program Podnikání a inovace pro konkurenceschopnost"
+  zkratka: "OP PIK"
+- id: op-tak
+  nazev: "Operační program Technologie a aplikace pro konkurenceschopnost"
+  zkratka: "OP TAK"
+- id: npo
+  nazev: "Národní plán obnovy (NextGenerationEU)"
+  zkratka: "NPO"
+- id: iti
+  nazev: "Integrované územní investice"
+  zkratka: "ITI"
+- id: mmr
+  nazev: "Ministerstvo pro místní rozvoj"
+  zkratka: "MMR"
+- id: pardubicky-kraj
+  nazev: "Rozpočet Pardubického kraje"
+- id: mesto-pardubice
+  nazev: "Statutární město Pardubice"
+- id: kolektivni-systemy
+  nazev: "Kolektivní systémy EKO-KOM, ELEKTROWIN a ASEKOL"

@@ -8,10 +8,12 @@ import Paticka from '../components/Paticka.astro';
 interface Props {
   titulek?: string;
   popis?: string;
+  noindex?: boolean;
 }
 const nazevWebu = 'Region příležitostí a budoucnosti';
 const {
   titulek,
+  noindex = false,
   popis = 'Vybrané neinvestiční projekty regionálního rozvoje Pardubického kraje: šest témat, instituce a cílové skupiny.',
 } = Astro.props;
 const plnyTitulek = titulek ? `${titulek} | ${nazevWebu}` : `${nazevWebu} | Pardubický kraj`;
@@ -23,6 +25,7 @@ const plnyTitulek = titulek ? `${titulek} | ${nazevWebu}` : `${nazevWebu} | Pard
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{plnyTitulek}</title>
     <meta name="description" content={popis} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta property="og:title" content={plnyTitulek} />
     <meta property="og:description" content={popis} />
     <meta property="og:type" content="website" />
