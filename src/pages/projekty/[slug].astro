@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import Pripravujeme from '../../components/Pripravujeme.astro';
+
+export async function getStaticPaths() {
+  const projekty = await getCollection('projekty');
+  return projekty.map((projekt) => ({ params: { slug: projekt.id }, props: { projekt } }));
+}
+const { projekt } = Astro.props;
+---
+<Pripravujeme titulek={projekt.data.nazev} faze="fáze 3">
+  <p>Detail projektu vznikne ve fázi 3.</p>
+</Pripravujeme>

@@ -1,16 +1,127 @@
 ---
----
+import Zaklad from '../layouts/Zaklad.astro';
+import Schodiste from '../components/Schodiste.astro';
+import TemaKarta from '../components/TemaKarta.astro';
+import KamSmerujeme from '../components/KamSmerujeme.astro';
+import { nactiTemata, sklonuj } from '../lib/obsah';
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+const temata = await nactiTemata();
+const pocetProjektu = temata.reduce((s, t) => s + t.projekty.length, 0);
+const pocetOblasti = temata.reduce((s, t) => s + t.oblasti.length, 0);
+---
+<Zaklad>
+  <section class="hero">
+    <div class="obal hero__mrizka">
+      <div class="hero__text">
+        <p class="stitek">Neinvestiční projekty Pardubického kraje</p>
+        <h1>Region <span class="c">příležitostí</span> a <span class="m">budoucnosti</span></h1>
+        <p class="perex">
+          Přehled toho, co v Pardubickém kraji vzniká bez bagrů a betonu: projektů postavených na lidech, nápadech,
+          strategiích a spolupráci.
+        </p>
+        <div class="hero__akce">
+          <a class="tlacitko tlacitko--plne" href="/temata/">Prozkoumat témata</a>
+          <a class="tlacitko tlacitko--obrys" href="/organizace/">Zapojené instituce</a>
+        </div>
+      </div>
+      <Schodiste temata={temata} />
+    </div>
+  </section>
+
+  <section class="pas" aria-label="O iniciativě">
+    <div class="obal pas__mrizka">
+      <p class="pas__heslo">Nejde o stavby. Jde o hlavy, nápady, strategie a spolupráci.</p>
+      <p class="pas__popis">
+        Souhrn vybraných projektů a aktivit krajských i partnerských institucí. Nejde o úplný přehled všech
+        neinvestičních projektů v kraji, ale o pevný základ pro to, kam má kraj směřovat dál.
+      </p>
+    </div>
+  </section>
+
+  <section class="obal temata" id="temata" aria-labelledby="sest-temat">
+    <div class="temata__uvod">
+      <h2 id="sest-temat">Šest klíčových témat</h2>
+      <p>
+        Nejvýznamnější pilíře konkurenceschopnosti, udržitelného rozvoje a kvality života v kraji. Každé téma dělíme na
+        neinvestiční projekty a další řešené oblasti. Celkem {sklonuj(pocetProjektu, ['projekt', 'projekty', 'projektů'])}
+        a {sklonuj(pocetOblasti, ['oblast', 'oblasti', 'oblastí'])}.
+      </p>
+    </div>
+    <div class="temata__mrizka">
+      {temata.map((t) => <TemaKarta polozka={t} />)}
+    </div>
+  </section>
+
+  <div class="obal smer-obal">
+    <KamSmerujeme />
+  </div>
+</Zaklad>
+
+<style>
+  .hero__mrizka {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: end;
+    padding-block: clamp(40px, 7vw, 80px) clamp(40px, 6vw, 72px);
+  }
+  .hero__text { display: flex; flex-direction: column; gap: 28px; }
+  h1 {
+    font-size: clamp(44px, 7vw, 84px);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
+  h1 .c { color: var(--cervena); }
+  h1 .m { color: var(--modra); }
+  .perex {
+    max-width: 540px;
+    font-size: clamp(17px, 1.6vw, 19px);
+    line-height: 1.55;
+    color: var(--text-perex);
+  }
+  .hero__akce { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .pas { background: var(--cervena); color: var(--bila); }
+  .pas__mrizka {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: end;
+    padding-block: clamp(36px, 5vw, 56px);
+  }
+  .pas__heslo {
+    font: 800 clamp(28px, 3.6vw, 42px)/1.08 var(--font-titulky);
+    font-stretch: 110%;
+    letter-spacing: -0.02em;
+  }
+  .pas__popis { color: #FFE3E6; line-height: 1.55; }
+
+  .temata {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    padding-block: clamp(48px, 6vw, 72px);
+  }
+  .temata__uvod {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: end;
+  }
+  .temata__uvod h2 { font-size: clamp(36px, 5vw, 56px); line-height: 0.98; }
+  .temata__uvod p { color: var(--text-perex); line-height: 1.55; }
+  .temata__mrizka {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .smer-obal { padding-bottom: clamp(48px, 6vw, 72px); }
+
+  @media (max-width: 1024px) {
+    .hero__mrizka, .pas__mrizka, .temata__uvod { grid-template-columns: 1fr; gap: 32px; }
+    .temata__mrizka { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .temata__mrizka { grid-template-columns: 1fr; }
+  }
+</style>

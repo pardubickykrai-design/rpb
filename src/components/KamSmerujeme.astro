@@ -1,0 +1,60 @@
+---
+// Panel "Kam směřujeme" (MASTER 6.9). Obsah podle úvodní strany publikace.
+---
+<section class="smer" aria-labelledby="kam-smerujeme">
+  <h2 id="kam-smerujeme">Kam směřujeme</h2>
+  <ol class="faze">
+    <li>
+      <span class="faze__hlava">Fáze 1 · Mapování <span class="stav">Probíhá</span></span>
+      <p>Sbíráme, popisujeme a předběžně vyhodnocujeme, co neinvestiční projekty a další aktivity přinesly pro rozvoj kraje.</p>
+    </li>
+    <li>
+      <span class="faze__hlava">Fáze 2 · Vyhodnocení</span>
+      <p>Zhodnotíme dosavadní přístup k rozvoji kraje a připravíme systematický postup pro další neinvestiční aktivity.</p>
+    </li>
+  </ol>
+</section>
+
+<style>
+  .smer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: var(--radius);
+    background: var(--modra);
+    color: var(--bila);
+  }
+  h2 { font-size: clamp(28px, 4vw, 40px); }
+  .faze {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .faze li {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 2px solid rgba(255, 255, 255, .35);
+  }
+  .faze__hlava {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font: 700 17px/1.3 var(--font-text);
+  }
+  .stav {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--cervena);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  p { line-height: 1.55; }
+</style>

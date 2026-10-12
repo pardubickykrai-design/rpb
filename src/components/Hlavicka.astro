@@ -1,0 +1,147 @@
+---
+import Znak from './Znak.astro';
+
+const polozky = [
+  { nazev: 'Témata', href: '/temata/' },
+  { nazev: 'Projekty', href: '/projekty/' },
+  { nazev: 'Časová osa', href: '/casova-osa/' },
+  { nazev: 'Instituce', href: '/organizace/' },
+  { nazev: 'Cílové skupiny', href: '/cilove-skupiny/' },
+];
+
+const cesta = Astro.url.pathname;
+const jeAktivni = (href: string) =>
+  cesta.startsWith(href) ||
+  (href === '/temata/' && cesta.startsWith('/tema/')) ||
+  (href === '/cilove-skupiny/' && cesta.startsWith('/cilova-skupina/'));
+---
+<header class="hlavicka">
+  <div class="obal hlavicka__radek">
+    <a href="/" class="logo" aria-label="Region příležitostí a budoucnosti, úvodní stránka">
+      <Znak velikost={36} />
+      <span class="logo__text">Region příležitostí<br />a budoucnosti</span>
+    </a>
+
+    <button class="menu-tlacitko" type="button" aria-expanded="false" aria-controls="hlavni-menu">
+      <span class="sr-only">Menu</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+    </button>
+
+    <div class="menu" id="hlavni-menu">
+      <nav aria-label="Hlavní navigace">
+        <ul>
+          {polozky.map((p) => (
+            <li>
+              <a href={p.href} aria-current={jeAktivni(p.href) ? 'page' : undefined}>{p.nazev}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <a class="kraj" href="https://www.pardubickykraj.cz" target="_blank" rel="noopener">
+        Pardubický kraj
+        <span aria-hidden="true">↗</span>
+        <span class="sr-only">(otevře se v novém okně)</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const tlacitko = document.querySelector<HTMLButtonElement>('.menu-tlacitko');
+  const menu = document.getElementById('hlavni-menu');
+  tlacitko?.addEventListener('click', () => {
+    const otevreno = tlacitko.getAttribute('aria-expanded') === 'true';
+    tlacitko.setAttribute('aria-expanded', String(!otevreno));
+    menu?.classList.toggle('menu--otevrene', !otevreno);
+  });
+</script>
+
+<style>
+  .hlavicka {
+    border-bottom: 1px solid var(--ramecek);
+    background: var(--papir);
+  }
+  .hlavicka__radek {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 80px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+  }
+  .logo__text {
+    font: 800 15px/1.02 var(--font-titulky);
+    font-stretch: 112%;
+  }
+  .menu {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .menu ul {
+    display: flex;
+    gap: 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .menu nav a {
+    display: inline-block;
+    padding: 8px 0;
+    font: 600 15px/1.2 var(--font-text);
+  }
+  .menu nav a:hover { color: var(--cervena); }
+  .menu nav a[aria-current='page'] {
+    color: var(--cervena);
+    box-shadow: 0 2px 0 var(--cervena);
+  }
+  .kraj {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 9px 14px;
+    border: 1.5px solid var(--modra);
+    border-radius: 999px;
+    color: var(--modra);
+    font: 700 12px/1.2 var(--font-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .kraj:hover { background: var(--modra); color: var(--bila); }
+
+  .menu-tlacitko {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 0;
+    color: var(--nocni-modra);
+    cursor: pointer;
+  }
+
+  @media (max-width: 1024px) {
+    .hlavicka__radek { flex-wrap: wrap; }
+    .menu-tlacitko { display: inline-flex; }
+    .menu {
+      display: none;
+      flex-basis: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 24px;
+    }
+    .menu--otevrene { display: flex; }
+    .menu ul { flex-direction: column; gap: 0; width: 100%; }
+    .menu nav { width: 100%; }
+    .menu nav a { display: block; padding: 12px 0; font-size: 17px; }
+    .menu nav a[aria-current='page'] { box-shadow: none; }
+  }
+</style>

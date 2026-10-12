@@ -1,0 +1,30 @@
+---
+// Dočasná stránka pro části webu, které vzniknou v dalších fázích.
+import Zaklad from '../layouts/Zaklad.astro';
+
+interface Props {
+  titulek: string;
+  faze: string;
+}
+const { titulek, faze } = Astro.props;
+---
+<Zaklad titulek={titulek}>
+  <section class="obal pripravujeme">
+    <p class="stitek">Připravujeme · {faze}</p>
+    <h1>{titulek}</h1>
+    <slot />
+    <a class="tlacitko tlacitko--obrys" href="/">Zpět na úvodní stránku</a>
+  </section>
+</Zaklad>
+
+<style>
+  .pripravujeme {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    padding-block: clamp(48px, 8vw, 96px);
+    min-height: 50vh;
+  }
+  h1 { font-size: clamp(36px, 5vw, 56px); }
+</style>

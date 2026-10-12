@@ -1,0 +1,87 @@
+---
+// Infografika na úvodní stránce: šest tematických dlaždic seřazených do schodiště (identita v3, MASTER 6.1).
+import { sklonuj, textNaPlose, type TemaSPolozkami } from '../lib/obsah';
+
+interface Props {
+  temata: TemaSPolozkami[];
+}
+const { temata } = Astro.props;
+
+// Umístění dlaždice v mřížce 3 x 3 podle čísla tématu.
+const pozice: Record<number, { sloupec: number; radek: number }> = {
+  1: { sloupec: 1, radek: 3 },
+  2: { sloupec: 2, radek: 3 },
+  3: { sloupec: 3, radek: 3 },
+  4: { sloupec: 2, radek: 2 },
+  5: { sloupec: 3, radek: 2 },
+  6: { sloupec: 3, radek: 1 },
+};
+
+// Pořadí v DOM shora dolů tak, jak schodiště vidí oko (pro čtečky a klávesnici).
+const poradi = [...temata].sort(
+  (a, b) => pozice[a.tema.data.cislo].radek - pozice[b.tema.data.cislo].radek || a.tema.data.cislo - b.tema.data.cislo,
+);
+---
+<nav class="schodiste" aria-label="Šest témat">
+  {poradi.map(({ tema, projekty, oblasti }) => {
+    const p = pozice[tema.data.cislo];
+    const pocty = [
+      projekty.length ? sklonuj(projekty.length, ['projekt', 'projekty', 'projektů']) : '',
+      oblasti.length ? sklonuj(oblasti.length, ['oblast', 'oblasti', 'oblastí']) : '',
+    ].filter(Boolean).join(' · ');
+    return (
+      <a
+        href={`/tema/${tema.id}/`}
+        class:list={['dlazdice', { 'dlazdice--vrchol': tema.data.cislo === 6 }]}
+        style={`--cislo:${tema.data.cislo};--sloupec:${p.sloupec};--radek:${p.radek};--plocha:${tema.data.barva_plocha};--na-plose:${textNaPlose(tema)}`}
+      >
+        <span class="dlazdice__cislo" aria-hidden="true">{tema.data.cislo}</span>
+        <span class="dlazdice__text">
+          <span class="dlazdice__nazev">{tema.data.nazev}</span>
+          <span class="dlazdice__pocty">{pocty}</span>
+        </span>
+      </a>
+    );
+  })}
+</nav>
+
+<style>
+  .schodiste {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(130px, 150px));
+    gap: 12px;
+  }
+  .dlazdice {
+    grid-column: var(--sloupec);
+    grid-row: var(--radek);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    border-radius: 4px;
+    background: var(--plocha);
+    color: var(--na-plose);
+    transition: transform .2s;
+  }
+  .dlazdice--vrchol { border-radius: 4px 150px 4px 4px; }
+  .dlazdice:hover, .dlazdice:focus-visible { transform: translateY(-4px); }
+  .dlazdice__cislo {
+    font: 800 30px/1 var(--font-titulky);
+    font-stretch: 115%;
+  }
+  .dlazdice__text { display: flex; flex-direction: column; gap: 4px; }
+  .dlazdice__nazev { font: 600 14px/1.2 var(--font-text); }
+  .dlazdice__pocty { font: 500 12px/1.2 var(--font-text); opacity: .9; }
+
+  /* Mobil: mřížka 2 x 3 se zachováním barev, bez schodiště */
+  @media (max-width: 640px) {
+    .schodiste {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: none;
+      grid-auto-rows: 120px;
+    }
+    .dlazdice { grid-column: auto; grid-row: auto; order: var(--cislo); }
+    .dlazdice--vrchol { border-radius: 4px 60px 4px 4px; }
+  }
+</style>

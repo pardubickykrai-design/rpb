@@ -1,0 +1,41 @@
+---
+import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource-variable/public-sans';
+import '../styles/global.css';
+import Hlavicka from '../components/Hlavicka.astro';
+import Paticka from '../components/Paticka.astro';
+
+interface Props {
+  titulek?: string;
+  popis?: string;
+}
+const nazevWebu = 'Region příležitostí a budoucnosti';
+const {
+  titulek,
+  popis = 'Vybrané neinvestiční projekty regionálního rozvoje Pardubického kraje: šest témat, instituce a cílové skupiny.',
+} = Astro.props;
+const plnyTitulek = titulek ? `${titulek} | ${nazevWebu}` : `${nazevWebu} | Pardubický kraj`;
+---
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{plnyTitulek}</title>
+    <meta name="description" content={popis} />
+    <meta property="og:title" content={plnyTitulek} />
+    <meta property="og:description" content={popis} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="cs_CZ" />
+    <meta name="theme-color" content="#F6F2EC" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <a class="preskocit" href="#obsah">Přeskočit na obsah</a>
+    <Hlavicka />
+    <main id="obsah">
+      <slot />
+    </main>
+    <Paticka />
+  </body>
+</html>
