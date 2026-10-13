@@ -37,11 +37,6 @@ const jeAktivni = (href: string) =>
           ))}
         </ul>
       </nav>
-      <a class="kraj" href="https://www.pardubickykraj.cz" target="_blank" rel="noopener">
-        Pardubický kraj
-        <span aria-hidden="true">↗</span>
-        <span class="sr-only">(otevře se v novém okně)</span>
-      </a>
     </div>
   </div>
 </header>
@@ -100,20 +95,6 @@ const jeAktivni = (href: string) =>
     color: var(--cervena);
     box-shadow: 0 2px 0 var(--cervena);
   }
-  .kraj {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    padding: 9px 14px;
-    border: 1.5px solid var(--modra);
-    border-radius: 999px;
-    color: var(--modra);
-    font: 700 12px/1.2 var(--font-text);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .kraj:hover { background: var(--modra); color: var(--bila); }
 
   .menu-tlacitko {
     display: none;
