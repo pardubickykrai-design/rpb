@@ -32,6 +32,16 @@ const plnyTitulek = titulek ? `${titulek} | ${nazevWebu}` : `${nazevWebu} | Pard
     <meta property="og:locale" content="cs_CZ" />
     <meta name="theme-color" content="#F6F2EC" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      // Padání kostek jen při prvním načtení v relaci (nebo s ?padani v adrese), nikdy při omezeném pohybu.
+      try {
+        var vynutit = new URLSearchParams(location.search).has('padani');
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches && (vynutit || !sessionStorage.getItem('rpb-padani'))) {
+          document.documentElement.classList.add('padani');
+          sessionStorage.setItem('rpb-padani', '1');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <a class="preskocit" href="#obsah">Přeskočit na obsah</a>

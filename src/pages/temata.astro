@@ -1,6 +1,6 @@
 ---
 import Zaklad from '../layouts/Zaklad.astro';
-import TemaKarta from '../components/TemaKarta.astro';
+import TetrisTemata from '../components/TetrisTemata.astro';
 import { nactiTemata } from '../lib/obsah';
 
 const temata = await nactiTemata();
@@ -13,9 +13,7 @@ const temata = await nactiTemata();
       Nejvýznamnější pilíře konkurenceschopnosti, udržitelného rozvoje a kvality života v kraji. Každé téma dělíme na
       neinvestiční projekty a další řešené oblasti.
     </p>
-    <div class="mrizka">
-      {temata.map((t) => <TemaKarta polozka={t} />)}
-    </div>
+    <TetrisTemata temata={temata} />
   </section>
 </Zaklad>
 

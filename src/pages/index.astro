@@ -1,7 +1,7 @@
 ---
 import Zaklad from '../layouts/Zaklad.astro';
 import Schodiste from '../components/Schodiste.astro';
-import TemaKarta from '../components/TemaKarta.astro';
+import TetrisTemata from '../components/TetrisTemata.astro';
 import KamSmerujeme from '../components/KamSmerujeme.astro';
 import { nactiTemata, sklonuj } from '../lib/obsah';
 
@@ -47,9 +47,7 @@ const pocetOblasti = temata.reduce((s, t) => s + t.oblasti.length, 0);
         a {sklonuj(pocetOblasti, ['oblast', 'oblasti', 'oblastí'])}.
       </p>
     </div>
-    <div class="temata__mrizka">
-      {temata.map((t) => <TemaKarta polozka={t} />)}
-    </div>
+    <TetrisTemata temata={temata} />
   </section>
 
   <div class="obal smer-obal">

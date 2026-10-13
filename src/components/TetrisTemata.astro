@@ -1,0 +1,228 @@
+---
+// Rozpis šesti témat jako hrací pole Tetrisu: každé téma je sloupec se svým tetrominem,
+// projekty a oblasti jsou kostky, které při zobrazení sekce dopadnou na dno.
+import { sklonuj, textNaPlose, zobrazovanyNazev, type TemaSPolozkami } from '../lib/obsah';
+
+interface Props {
+  temata: TemaSPolozkami[];
+}
+const { temata } = Astro.props;
+
+// Tetromino pro každé téma (souřadnice buněk v mřížce 3 x 3).
+const tvary: Record<number, [number, number][]> = {
+  1: [[0, 0], [0, 1], [0, 2], [1, 2]], // L
+  2: [[0, 1], [1, 1], [0, 2], [1, 2]], // O
+  3: [[0, 1], [1, 1], [2, 1], [1, 2]], // T
+  4: [[1, 1], [2, 1], [0, 2], [1, 2]], // S
+  5: [[1, 0], [1, 1], [1, 2], [0, 2]], // J
+  6: [[0, 1], [1, 1], [1, 2], [2, 2]], // Z
+};
+const nejvic = Math.max(...temata.map((t) => t.projekty.length + t.oblasti.length));
+---
+<div class="pole" style={`--radku:${nejvic}`}>
+  {temata.map(({ tema, projekty, oblasti }) => {
+    const naPlose = textNaPlose(tema);
+    const kostky = [
+      // Oblasti nahoře (mohou tvořit neúplnou řadu), plné projekty dole jako základ
+      ...oblasti.map((p) => ({ p, druh: 'oblast' })),
+      ...projekty.map((p) => ({ p, druh: 'projekt' })),
+    ];
+    return (
+      <section
+        class="studna"
+        aria-labelledby={`tetris-${tema.id}`}
+        style={`--barva:${tema.data.barva};--plocha:${tema.data.barva_plocha};--na-plose:${naPlose}`}
+      >
+        <a href={`/tema/${tema.id}/`} class="studna__hlava">
+          <svg class="tetromino" viewBox="0 0 66 66" aria-hidden="true" focusable="false">
+            {tvary[tema.data.cislo].map(([x, y]) => (
+              <rect x={x * 22 + 1} y={y * 22 + 1} width="20" height="20" rx="3" />
+            ))}
+          </svg>
+          <div class="studna__text">
+            <span class="studna__cislo" aria-hidden="true">{tema.data.cislo}</span>
+            <h3 id={`tetris-${tema.id}`}>{tema.data.nazev}</h3>
+            <span class="studna__pocty">
+              {[
+                projekty.length ? sklonuj(projekty.length, ['projekt', 'projekty', 'projektů']) : '',
+                oblasti.length ? sklonuj(oblasti.length, ['oblast', 'oblasti', 'oblastí']) : '',
+              ].filter(Boolean).join(' · ')}
+            </span>
+          </div>
+        </a>
+        <ul class="studna__kostky">
+          {kostky.map(({ p, druh }, i) => (
+            <li class:list={['kostka', `kostka--${druh}`]} style={`--i:${kostky.length - 1 - i}`}>
+              <a href={`/projekty/${p.id}/`}>
+                <span class="kostka__druh">{druh === 'projekt' ? 'Projekt' : 'Oblast'}</span>
+                <span class="kostka__nazev">{zobrazovanyNazev(p)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  })}
+</div>
+
+<script>
+  // Kostky dopadnou, až se hrací pole objeví na obrazovce. Bez JavaScriptu jsou rovnou na místě.
+  const pole = document.querySelector<HTMLElement>('.pole');
+  const pomalu = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (pole && !pomalu && 'IntersectionObserver' in window) {
+    pole.classList.add('pole--ceka');
+    const pozorovatel = new IntersectionObserver(
+      (zaznamy) => {
+        if (zaznamy.some((z) => z.isIntersecting)) {
+          pole.classList.remove('pole--ceka');
+          pole.classList.add('pole--pada');
+          pozorovatel.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    pozorovatel.observe(pole);
+  }
+</script>
+
+<style>
+  /* Hrací pole se jemnou mřížkou */
+  .pole {
+    --bunka: 22px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 16px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background-color: var(--bila);
+    background-image:
+      linear-gradient(var(--linka) 1px, transparent 1px),
+      linear-gradient(90deg, var(--linka) 1px, transparent 1px);
+    background-size: var(--bunka) var(--bunka);
+    background-position: -1px -1px;
+  }
+
+  .studna {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .studna__hlava {
+    display: grid;
+    grid-template-columns: 66px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: end;
+    padding: 14px 14px 12px;
+    border-radius: var(--radius);
+    background: var(--plocha);
+    color: var(--na-plose);
+    transition: transform .2s;
+  }
+  .studna__hlava:hover { transform: translateY(-3px); }
+  .tetromino { grid-row: 1 / 3; width: 66px; height: 66px; }
+  .tetromino rect {
+    fill: currentColor;
+    fill-opacity: .9;
+  }
+  /* Při najetí se tetromino otočí jako v Tetrisu */
+  .studna__hlava:hover .tetromino { transform: rotate(90deg); transition: transform .25s; }
+  .tetromino { transition: transform .25s; }
+  .studna__cislo {
+    font: 800 34px/0.9 var(--font-titulky);
+    font-stretch: 115%;
+  }
+  .studna__text { display: flex; flex-direction: column; gap: 4px; }
+  .studna__text h3 {
+    font-size: 21px;
+    line-height: 1.05;
+    font-stretch: 110%;
+    letter-spacing: -0.01em;
+  }
+  .studna__pocty { font: 600 12px/1.2 var(--font-text); opacity: .9; }
+
+  /* Kostky leží na dně sloupce, sloupce mají stejnou výšku, takže dna lícují jako řádek v Tetrisu */
+  .studna__kostky {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-flow: row dense;
+    align-content: end;
+    gap: 6px;
+    min-height: calc(var(--radku) * 46px);
+    margin: 0;
+    padding: 0 0 6px;
+    list-style: none;
+    border-bottom: 4px solid var(--nocni-modra);
+  }
+  /* Projekt zabere celý řádek, oblasti se skládají po dvou vedle sebe */
+  .kostka--projekt { grid-column: span 4; }
+  .kostka--oblast { grid-column: span 2; }
+  .kostka a {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 52px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: transform .15s, filter .15s;
+  }
+  .kostka--projekt a {
+    background-color: var(--plocha);
+    /* vzor buněk, aby kostka vypadala složená z políček */
+    background-image:
+      linear-gradient(rgba(0, 0, 0, .07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, .07) 1px, transparent 1px);
+    background-size: var(--bunka) var(--bunka);
+    color: var(--na-plose);
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, .28),
+      inset 0 -4px 0 rgba(0, 0, 0, .18),
+      inset 3px 0 0 rgba(255, 255, 255, .12),
+      inset -3px 0 0 rgba(0, 0, 0, .1);
+  }
+  .kostka--oblast a {
+    background: var(--bila);
+    color: var(--nocni-modra);
+    box-shadow: inset 0 0 0 2.5px var(--barva), inset 0 -5px 0 color-mix(in srgb, var(--barva) 25%, transparent);
+  }
+  .kostka a:hover { transform: translateY(-4px); filter: brightness(1.06); }
+  .kostka__druh {
+    font: 700 10px/1 var(--font-text);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .75;
+  }
+  .kostka__nazev { font: 700 14.5px/1.25 var(--font-text); overflow-wrap: anywhere; }
+  .kostka--oblast .kostka__nazev { font-size: 13.5px; }
+
+  /* Animace dopadu: nejdřív spodní kostky, pak vyšší */
+  .pole--ceka .kostka { opacity: 0; }
+  .pole--pada .kostka {
+    animation: dopad 520ms cubic-bezier(.55, 0, 1, .45) backwards;
+    animation-delay: calc(var(--i) * 120ms + var(--zpozdeni, 0ms));
+  }
+  .pole--pada .studna:nth-child(2) { --zpozdeni: 90ms; }
+  .pole--pada .studna:nth-child(3) { --zpozdeni: 180ms; }
+  .pole--pada .studna:nth-child(4) { --zpozdeni: 270ms; }
+  .pole--pada .studna:nth-child(5) { --zpozdeni: 360ms; }
+  .pole--pada .studna:nth-child(6) { --zpozdeni: 450ms; }
+  @keyframes dopad {
+    0% { transform: translateY(-420px); opacity: 0; }
+    15% { opacity: 1; }
+    80% { transform: translateY(0) scaleY(.9); animation-timing-function: ease-out; }
+    100% { transform: none; opacity: 1; }
+  }
+
+  @media (max-width: 1024px) {
+    .pole { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .pole { grid-template-columns: 1fr; padding: 12px; }
+    .studna__kostky { min-height: 0; }
+  }
+</style>

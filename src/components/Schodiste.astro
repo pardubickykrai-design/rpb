@@ -66,6 +66,19 @@ const poradi = [...temata].sort(
   }
   .dlazdice--vrchol { border-radius: 4px 150px 4px 4px; }
   .dlazdice:hover, .dlazdice:focus-visible { transform: translateY(-4px); }
+
+  /* Padání shora při prvním načtení: odspodu nahoru jako v Tetrisu, poslední dopadne vrchol. */
+  :global(.padani) .dlazdice {
+    transform-origin: 50% 100%;
+    animation: spadnout 760ms cubic-bezier(.55, 0, 1, .45) backwards;
+    animation-delay: calc(250ms + (var(--cislo) - 1) * 170ms);
+  }
+  @keyframes spadnout {
+    0% { transform: translateY(-120vh); }
+    70% { transform: translateY(0) scale(1.05, .88); animation-timing-function: ease-out; }
+    85% { transform: translateY(-10px) scale(.98, 1.03); animation-timing-function: ease-in; }
+    100% { transform: none; }
+  }
   .dlazdice__cislo {
     font: 800 30px/1 var(--font-titulky);
     font-stretch: 115%;
