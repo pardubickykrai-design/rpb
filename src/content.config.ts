@@ -87,6 +87,8 @@ const projekty = defineCollection({
         zacatek: datum.optional(),
         konec: datum.optional(),
         prubezne: z.boolean().default(false),
+        // Do kdy může projekt pokračovat; na časové ose čárkovaně za koncem.
+        pokracovani: datum.optional(),
         poznamka: z.string().optional(),
       })
       .optional(),

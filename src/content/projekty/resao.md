@@ -12,6 +12,7 @@ organizace:
 obdobi:
   zacatek: "2022-03"
   konec: "2026"
+  pokracovani: "2029"
   poznamka: "s možností pokračování v dalších letech"
 financovani: [sfzp, norske-fondy, pardubicky-kraj]
 rozpocet: "Celkem 25 801 862 Kč: Norské fondy 19 738 424 Kč, SFŽP 3 483 251 Kč, Pardubický kraj 2 580 187 Kč"

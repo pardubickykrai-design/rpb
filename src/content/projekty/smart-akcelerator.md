@@ -11,6 +11,7 @@ organizace:
 obdobi:
   zacatek: "2023"
   konec: "2026"
+  pokracovani: "2029-06"
   poznamka: "s možností pokračování do června 2029"
 financovani: [op-jak, pardubicky-kraj]
 rozpocet: "Celkem 49 100 000 Kč: OP JAK 40 400 000 Kč, Pardubický kraj 8 700 000 Kč"

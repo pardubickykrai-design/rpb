@@ -1,4 +1,543 @@
 ---
-import Pripravujeme from '../components/Pripravujeme.astro';
+// Časová osa neinvestičních projektů (fáze 4). Oblasti bez pevného začátku a konce se nezobrazují.
+import { getCollection } from 'astro:content';
+import Zaklad from '../layouts/Zaklad.astro';
+import { nactiTemata, sklonuj, zobrazovanyNazev, type Projekt } from '../lib/obsah';
+import { CILOVE_SKUPINY_NAZEV, STAV_NAZEV, obdobiSlovy, stavProjektu, type Stav } from '../lib/format';
+
+const PRVNI_ROK = 2022;
+const POSLEDNI_ROK = 2029;
+const ROKY = Array.from({ length: POSLEDNI_ROK - PRVNI_ROK + 1 }, (_, i) => PRVNI_ROK + i);
+const MESICU = ROKY.length * 12;
+
+/** "2024-04" → pořadí měsíce od začátku osy; rok bez měsíce je leden, u konce prosinec. */
+const naMesic = (d: string, konec: boolean) => {
+  const [r, m] = d.split('-').map(Number);
+  return (r - PRVNI_ROK) * 12 + (m ? m - 1 : konec ? 11 : 0);
+};
+const procenta = (mesic: number) => (Math.min(Math.max(mesic, 0), MESICU) / MESICU) * 100;
+/** "2024-04" → "4/2024", rok bez měsíce doplní na leden nebo prosinec. */
+const kratce = (d: string, konec: boolean) => {
+  const [r, m] = d.split('-');
+  return `${m ? Number(m) : konec ? 12 : 1}/${r}`;
+};
+
+const temata = await nactiTemata();
+const organizace = await getCollection('organizace');
+const financovani = await getCollection('financovani');
+const nazevOrg = (id: string) => {
+  const o = organizace.find((x) => x.id === id);
+  return o ? (o.data.zkratka ?? o.data.nazev) : id;
+};
+const nazevFin = (id: string) => {
+  const f = financovani.find((x) => x.id === id);
+  return f ? (f.data.zkratka ?? f.data.nazev) : id;
+};
+
+const vedouci = (p: Projekt) => p.data.organizace.find((o) => o.role === 'vedouci')?.id.id;
+
+interface Radek {
+  p: Projekt;
+  stav: Stav;
+  od: number;
+  do: number;
+  pokracovani?: number;
+  orezano: boolean;
+  popisek: string;
+}
+
+const skupiny = temata
+  .map(({ tema, projekty }) => ({
+    tema,
+    radky: projekty
+      .filter((p) => p.data.obdobi?.zacatek && p.data.obdobi.konec)
+      .map((p): Radek => {
+        const o = p.data.obdobi!;
+        const zacatek = naMesic(o.zacatek!, false);
+        const orezano = zacatek < 0;
+        const popisek =
+          o.zacatek === o.konec
+            ? o.zacatek!
+            : `${orezano ? 'od ' + o.zacatek!.slice(0, 4) : kratce(o.zacatek!, false)} – ${kratce(o.konec!, true)}`;
+        return {
+          p,
+          stav: stavProjektu(p) ?? 'probiha',
+          od: procenta(zacatek),
+          do: procenta(naMesic(o.konec!, true) + 1),
+          pokracovani: o.pokracovani ? procenta(naMesic(o.pokracovani, true) + 1) : undefined,
+          orezano,
+          popisek,
+        };
+      }),
+  }))
+  .filter((s) => s.radky.length);
+
+const vsechny = skupiny.flatMap((s) => s.radky);
+const pocet = (stav: Stav) => vsechny.filter((r) => r.stav === stav).length;
+
+// Možnosti filtrů jen z hodnot, které se na ose skutečně vyskytují.
+const unikatni = (hodnoty: string[]) => [...new Set(hodnoty)];
+const moznostiOrg = unikatni(vsechny.map((r) => vedouci(r.p)).filter((x): x is string => !!x))
+  .map((id) => ({ id, nazev: nazevOrg(id) }))
+  .sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+const moznostiFin = unikatni(vsechny.flatMap((r) => r.p.data.financovani.map((f) => f.id)))
+  .map((id) => ({ id, nazev: nazevFin(id) }))
+  .sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+const moznostiSkupin = Object.entries(CILOVE_SKUPINY_NAZEV).filter(([id]) =>
+  vsechny.some((r) => r.p.data.cilove_skupiny.includes(id as never)),
+);
+
+const dnes = new Date();
+const dnesMesic = (dnes.getFullYear() - PRVNI_ROK) * 12 + dnes.getMonth();
+
+const atributy = (r: Radek, tema: string) => ({
+  'data-polozka': '',
+  'data-tema': tema,
+  'data-org': vedouci(r.p) ?? '',
+  'data-fin': r.p.data.financovani.map((f) => f.id).join(' '),
+  'data-skupiny': r.p.data.cilove_skupiny.join(' '),
+});
 ---
-<Pripravujeme titulek="Časová osa" faze="fáze 4" />
+<Zaklad titulek="Časová osa" popis="Doba realizace neinvestičních projektů Pardubického kraje v letech 2022 až 2029.">
+  <div class="obal stranka">
+    <header class="uvod">
+      <div>
+        <h1>Časová osa projektů</h1>
+        <p class="perex">
+          Doba realizace neinvestičních projektů {PRVNI_ROK}–{POSLEDNI_ROK}. Řešené oblasti bez pevného začátku a konce
+          zde nejsou.
+        </p>
+      </div>
+      <div class="cisla">
+        <p class="cislo cislo--probiha"><strong>{pocet('probiha')}</strong> právě probíhá</p>
+        <p class="cislo"><strong>{pocet('ukonceno')}</strong> ukončeno</p>
+      </div>
+    </header>
+
+    <form class="filtry" data-filtry>
+      <label>
+        <span>Vedoucí organizace</span>
+        <select name="org">
+          <option value="">Všechny organizace</option>
+          {moznostiOrg.map((o) => <option value={o.id}>{o.nazev}</option>)}
+        </select>
+      </label>
+      <label>
+        <span>Zdroj financování</span>
+        <select name="fin">
+          <option value="">Všechny zdroje</option>
+          {moznostiFin.map((f) => <option value={f.id}>{f.nazev}</option>)}
+        </select>
+      </label>
+      <label>
+        <span>Cílová skupina</span>
+        <select name="skupina">
+          <option value="">Všechny skupiny</option>
+          {moznostiSkupin.map(([id, nazev]) => <option value={id}>{nazev}</option>)}
+        </select>
+      </label>
+      <p class="filtry__souhrn">
+        <strong data-pocet aria-live="polite">{sklonuj(vsechny.length, ['projekt', 'projekty', 'projektů'])}</strong>
+        <button type="reset" class="zrusit">Zrušit filtry</button>
+      </p>
+    </form>
+
+    <div class="cipy" role="group" aria-label="Téma">
+      <button type="button" class="cip cip--vse" data-cip="" aria-pressed="true">
+        <span class="cip__znak" aria-hidden="true">Σ</span> Vše
+      </button>
+      {skupiny.map(({ tema }) => (
+        <button type="button" class="cip" data-cip={tema.id} aria-pressed="false" style={`--barva:${tema.data.barva}`}>
+          <span class="cip__znak" aria-hidden="true">{tema.data.cislo}</span> {tema.data.nazev}
+        </button>
+      ))}
+    </div>
+
+    <ul class="legenda" aria-label="Legenda">
+      <li><span class="vzorek vzorek--probiha"></span>Probíhá</li>
+      <li><span class="vzorek vzorek--ukonceno"></span>Ukončeno</li>
+      <li><span class="vzorek vzorek--pokracovani"></span>Možné pokračování</li>
+    </ul>
+
+    <div class="karta">
+      <div class="posuvnik">
+        <div class="graf" style={`--dnes:${procenta(dnesMesic + 0.5)}%`} data-graf>
+          <div class="hlava" aria-hidden="true">
+            <span></span>
+            <ol class="roky">
+              {ROKY.map((r) => <li class:list={{ letos: r === dnes.getFullYear() }}>{r}</li>)}
+            </ol>
+          </div>
+
+          <div class="telo">
+            <div class="pozadi" aria-hidden="true">
+              {ROKY.map((r) => <span class:list={{ letos: r === dnes.getFullYear() }}></span>)}
+              {dnesMesic >= 0 && dnesMesic < MESICU && (
+                <span class="dnes" data-dnes><span class="dnes__stitek">Dnes · {dnes.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' })}</span></span>
+              )}
+            </div>
+
+            {skupiny.map(({ tema, radky }) => (
+              <section class="skupina" data-skupina={tema.id} style={`--barva:${tema.data.barva};--plocha:${tema.data.barva_plocha};--na-plose:${tema.data.text_na_plose === 'bila' ? 'var(--bila)' : 'var(--nocni-modra)'}`}>
+                <h2 class="skupina__nazev">
+                  <span class="znacka" aria-hidden="true">{tema.data.cislo}</span>
+                  {tema.data.nazev}
+                </h2>
+                <ul>
+                  {radky.map((r) => (
+                    <li class="radek" {...atributy(r, tema.id)}>
+                      <a class="radek__popis" href={`/projekty/${r.p.id}/`}>
+                        <span class="radek__nazev">{zobrazovanyNazev(r.p)}</span>
+                        {vedouci(r.p) && <span class="radek__org">{nazevOrg(vedouci(r.p)!)}</span>}
+                      </a>
+                      <div class="radek__draha">
+                        {r.pokracovani && r.pokracovani > r.do && (
+                          <span class="pokracovani" style={`left:calc(${r.do}% - 24px);width:calc(${r.pokracovani - r.do}% + 24px)`} aria-hidden="true"></span>
+                        )}
+                        <span
+                          class:list={['pruh', `pruh--${r.stav}`, { 'pruh--orezany': r.orezano }]}
+                          style={`left:${r.od}%;width:${r.do - r.od}%`}
+                        >
+                          {r.popisek}
+                          <span class="sr-only">, {STAV_NAZEV[r.stav].toLowerCase()}{r.p.data.obdobi?.pokracovani && ', s možným pokračováním'}</span>
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p class="prazdno" data-prazdno hidden>Filtrům neodpovídá žádný projekt.</p>
+    </div>
+
+    <details class="tabulka">
+      <summary>Zobrazit jako tabulku</summary>
+      <div class="posuvnik">
+        <table>
+          <thead>
+            <tr><th scope="col">Projekt</th><th scope="col">Téma</th><th scope="col">Vedoucí organizace</th><th scope="col">Období</th><th scope="col">Stav</th></tr>
+          </thead>
+          <tbody>
+            {skupiny.flatMap(({ tema, radky }) =>
+              radky.map((r) => (
+                <tr {...atributy(r, tema.id)}>
+                  <th scope="row"><a href={`/projekty/${r.p.id}/`}>{r.p.data.nazev}</a></th>
+                  <td>{tema.data.nazev}</td>
+                  <td>{vedouci(r.p) ? nazevOrg(vedouci(r.p)!) : '–'}</td>
+                  <td>{obdobiSlovy(r.p)}{r.p.data.obdobi?.poznamka && ` (${r.p.data.obdobi.poznamka})`}</td>
+                  <td>{STAV_NAZEV[r.stav]}</td>
+                </tr>
+              )),
+            )}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</Zaklad>
+
+<script>
+  // Stejné jako sklonuj() v lib/obsah.ts, ten ale v prohlížeči načíst nejde (používá astro:content).
+  const projektu = (n: number) => `${n} ${n === 1 ? 'projekt' : n >= 2 && n <= 4 ? 'projekty' : 'projektů'}`;
+
+  const formular = document.querySelector<HTMLFormElement>('[data-filtry]')!;
+  const cipy = [...document.querySelectorAll<HTMLButtonElement>('[data-cip]')];
+  const polozky = [...document.querySelectorAll<HTMLElement>('[data-polozka]')];
+  const skupiny = [...document.querySelectorAll<HTMLElement>('[data-skupina]')];
+  const pocet = document.querySelector('[data-pocet]')!;
+  const prazdno = document.querySelector<HTMLElement>('[data-prazdno]')!;
+  const graf = document.querySelector<HTMLElement>('[data-graf]')!;
+  let tema = '';
+
+  const obsahuje = (seznam: string | undefined, hodnota: string) => !hodnota || (seznam ?? '').split(' ').includes(hodnota);
+
+  function filtruj() {
+    const f = new FormData(formular);
+    const org = String(f.get('org') ?? '');
+    const fin = String(f.get('fin') ?? '');
+    const skupina = String(f.get('skupina') ?? '');
+    for (const el of polozky) {
+      const d = el.dataset;
+      el.hidden = !(
+        (!tema || d.tema === tema) &&
+        (!org || d.org === org) &&
+        obsahuje(d.fin, fin) &&
+        obsahuje(d.skupiny, skupina)
+      );
+    }
+    for (const s of skupiny) s.hidden = !s.querySelector('[data-polozka]:not([hidden])');
+    const viditelne = polozky.filter((el) => el.matches('.radek') && !el.hidden).length;
+    pocet.textContent = projektu(viditelne);
+    prazdno.hidden = viditelne > 0;
+    graf.hidden = viditelne === 0;
+  }
+
+  for (const cip of cipy) {
+    cip.addEventListener('click', () => {
+      tema = cip.dataset.cip ?? '';
+      for (const c of cipy) c.setAttribute('aria-pressed', String(c === cip));
+      filtruj();
+    });
+  }
+  formular.addEventListener('change', filtruj);
+  formular.addEventListener('reset', () => {
+    tema = '';
+    for (const c of cipy) c.setAttribute('aria-pressed', String(c.dataset.cip === ''));
+    setTimeout(filtruj);
+  });
+</script>
+
+<style>
+  .stranka [hidden] { display: none !important; }
+  .stranka {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-block: clamp(48px, 6vw, 72px);
+  }
+
+  .uvod {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px 40px;
+    margin-bottom: 8px;
+  }
+  h1 { font-size: clamp(36px, 5vw, 64px); }
+  .perex { max-width: 560px; margin-top: 20px; color: var(--text-perex); line-height: 1.55; }
+
+  .cisla { display: flex; gap: 12px; }
+  .cislo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 168px;
+    padding: 20px 22px;
+    border-radius: var(--radius);
+    background: var(--bila);
+    font: 600 14px/1.2 var(--font-text);
+    color: var(--text-2);
+  }
+  .cislo strong { font: 800 40px/1 var(--font-titulky); font-stretch: 115%; color: var(--nocni-modra); }
+  .cislo--probiha { background: var(--cervena); color: var(--bila); }
+  .cislo--probiha strong { color: var(--bila); }
+
+  .filtry {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--bila);
+  }
+  .filtry label { display: flex; flex-direction: column; gap: 8px; }
+  .filtry label > span {
+    font: 700 11px/1.2 var(--font-text);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  select {
+    min-height: 44px;
+    padding: 0 40px 0 14px;
+    border: 1px solid var(--ramecek);
+    border-radius: 6px;
+    background: var(--papir) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2315254A' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 14px center;
+    color: var(--text);
+    font: 500 15px/1.2 var(--font-text);
+    appearance: none;
+  }
+  .filtry__souhrn { display: flex; align-items: center; gap: 16px; min-height: 44px; white-space: nowrap; font-size: 15px; }
+  .zrusit {
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--cervena);
+    font: 600 14px/1.2 var(--font-text);
+    cursor: pointer;
+  }
+  .zrusit:hover { text-decoration: underline; }
+
+  .cipy { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cip {
+    --barva: var(--nocni-modra);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 16px 8px 10px;
+    border: 1.5px solid var(--ramecek);
+    border-radius: 999px;
+    background: var(--bila);
+    color: var(--text);
+    font: 600 15px/1.2 var(--font-text);
+    cursor: pointer;
+  }
+  .cip:hover { border-color: var(--barva); }
+  .cip__znak {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--barva);
+    color: var(--bila);
+    font: 800 12px/1 var(--font-titulky);
+  }
+  .cip[aria-pressed='true'] { border-color: var(--nocni-modra); background: var(--nocni-modra); color: var(--bila); }
+  .cip[aria-pressed='true'] .cip__znak { background: var(--bila); color: var(--nocni-modra); }
+
+  .legenda { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--text-2); }
+  .legenda li { display: flex; align-items: center; gap: 8px; }
+  .vzorek { width: 30px; height: 10px; border-radius: 999px; }
+  .vzorek--probiha { background: var(--modra); }
+  .vzorek--ukonceno { border: 1.5px solid var(--modra); background: var(--bila); }
+  .vzorek--pokracovani { border: 1.5px dashed var(--text-2); }
+
+  .karta { border-radius: var(--radius); background: var(--bila); padding: 24px 0 32px; }
+  .posuvnik { overflow-x: auto; }
+
+  /* Mřížka: sloupec popisků a dráha přes 8 let */
+  .graf {
+    --popisky: 260px;
+    --sloupec: calc((100% - var(--popisky)) / 8);
+    min-width: 900px;
+    padding-inline: 24px;
+  }
+  .hlava, .radek { display: grid; grid-template-columns: var(--popisky) 1fr; }
+  .hlava { border-bottom: 1px solid var(--linka); }
+  .roky { display: grid; grid-template-columns: repeat(8, 1fr); margin: 0; padding: 0 0 14px; list-style: none; }
+  .roky li { padding-left: 8px; font: 700 15px/1 var(--font-text); }
+  .roky .letos { color: var(--cervena); }
+
+  .telo { position: relative; padding-bottom: 28px; }
+  .pozadi {
+    position: absolute;
+    inset: 0 0 0 var(--popisky);
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    pointer-events: none;
+  }
+  .pozadi > span { border-left: 1px solid var(--linka); }
+  .pozadi > .letos { background: rgba(200, 16, 46, .035); }
+  .dnes {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--dnes);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--cervena);
+    border: 0 !important;
+    z-index: 2;
+  }
+  .dnes__stitek {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--cervena);
+    color: var(--bila);
+    font: 700 11px/1.2 var(--font-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .skupina { position: relative; padding-top: 22px; }
+  .skupina ul { margin: 0; padding: 0; list-style: none; }
+  .skupina__nazev {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  .znacka {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    background: var(--plocha);
+    color: var(--na-plose);
+    font: 800 13px/1 var(--font-titulky);
+  }
+
+  .radek { align-items: center; min-height: 48px; }
+  .radek__popis { display: flex; flex-direction: column; padding: 6px 16px 6px 36px; }
+  .radek__nazev { font: 500 15px/1.25 var(--font-text); }
+  .radek__org { font-size: 12.5px; color: var(--text-2); }
+  .radek__popis:hover .radek__nazev { color: var(--cervena); text-decoration: underline; }
+
+  .radek__draha { position: relative; height: 30px; }
+  .pruh, .pokracovani {
+    position: absolute;
+    top: 0;
+    height: 30px;
+    border-radius: 999px;
+  }
+  .pruh {
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1.5px solid var(--barva);
+    font: 700 13px/1 var(--font-text);
+    white-space: nowrap;
+  }
+  .pruh--probiha, .pruh--planovano { background: var(--plocha); border-color: var(--plocha); color: var(--na-plose); }
+  .pruh--planovano { opacity: .6; }
+  .pruh--ukonceno { background: var(--bila); color: var(--nocni-modra); }
+  .pruh--orezany { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .pokracovani { border: 1.5px dashed var(--barva); }
+
+  .prazdno { padding: 24px; color: var(--text-2); }
+
+  .tabulka summary {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tabulka summary:hover { color: var(--cervena); }
+  table {
+    width: 100%;
+    min-width: 720px;
+    margin-top: 12px;
+    border-collapse: collapse;
+    border-radius: var(--radius);
+    background: var(--bila);
+    font-size: 15px;
+  }
+  th, td { padding: 12px 16px; border-bottom: 1px solid var(--linka); text-align: left; vertical-align: top; }
+  thead th { font: 700 11px/1.2 var(--font-text); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); }
+  tbody th { font-weight: 600; }
+  tbody th a:hover { color: var(--cervena); text-decoration: underline; }
+
+  @media (max-width: 1024px) {
+    .filtry { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .filtry__souhrn { grid-column: 1 / -1; }
+  }
+  @media (max-width: 720px) {
+    .filtry { grid-template-columns: 1fr; }
+    .cisla { width: 100%; }
+    .cislo { flex: 1; min-width: 0; }
+    /* Popisky zůstávají při vodorovném posunu grafu na místě. */
+    .graf { --popisky: 150px; padding-inline: 0 16px; }
+    .radek__popis, .skupina__nazev { position: sticky; left: 0; z-index: 3; background: var(--bila); }
+    .skupina__nazev { width: max-content; padding: 0 12px 0 16px; font-size: 15px; }
+    .radek__popis { padding: 6px 10px 6px 16px; }
+    .radek__nazev { font-size: 14px; }
+    .hlava > span { position: sticky; left: 0; background: var(--bila); }
+  }
+</style>

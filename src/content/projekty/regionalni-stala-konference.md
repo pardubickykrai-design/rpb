@@ -10,6 +10,7 @@ organizace:
 obdobi:
   zacatek: "2014"
   konec: "2025"
+  pokracovani: "2027"
   poznamka: "s možným pokračováním"
 financovani: [op-tp, pardubicky-kraj]
 rozpocet: "Rozpočet na roky 2024 a 2025 celkem 5 465 106 Kč: OP TP 3 552 319 Kč, Pardubický kraj 1 912 787 Kč"
