@@ -1,6 +1,8 @@
 ---
 nazev: "Pardubický podnikatelský inkubátor"
 zkratka: "P-PINK"
+popisek: "Pardubický podnikatelský inkubátor"
+logo: "p-pink.png"
 skupina: "primy-vliv"
 poradi: 30
 ---

@@ -1,6 +1,8 @@
 ---
 nazev: "Centrum pro regionální rozvoj České republiky, územní odbor Pardubice"
 zkratka: "CRR"
+popisek: "Centrum pro regionální rozvoj ČR"
+logo: "crr-pardubice.png"
 skupina: "spolupracujici"
 poradi: 160
 ---

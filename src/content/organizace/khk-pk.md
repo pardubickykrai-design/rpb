@@ -1,6 +1,8 @@
 ---
 nazev: "Krajská hospodářská komora Pardubického kraje"
 zkratka: "KHK PK"
+popisek: "Krajská hospodářská komora"
+logo: "khk-pk.png"
 skupina: "spolupracujici"
 poradi: 140
 ---

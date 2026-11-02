@@ -1,5 +1,7 @@
 ---
 nazev: "CzechInvest"
+popisek: "Podpora podnikání a investic"
+logo: "czechinvest.png"
 skupina: "spolupracujici"
 poradi: 120
 ---

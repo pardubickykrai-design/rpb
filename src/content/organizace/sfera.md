@@ -1,6 +1,8 @@
 ---
 nazev: "Vzdělávací centrum SFÉRA"
 zkratka: "SFÉRA"
+popisek: "Vzdělávací centrum v Automatických mlýnech"
+logo: "sfera.png"
 skupina: "spolupracujici"
 poradi: 100
 ---

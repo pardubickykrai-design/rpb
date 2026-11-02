@@ -45,6 +45,12 @@ const organizace = defineCollection({
   schema: z.object({
     nazev: z.string(),
     zkratka: z.string().optional(),
+    // Název na kartě v přehledu institucí, když se liší od zkratky (např. „Město Pardubice“).
+    kratky_nazev: z.string().optional(),
+    // Jednořádkový popisek pod názvem na kartě.
+    popisek: z.string().optional(),
+    // Soubor loga v public/loga/; používat jen se svolením organizace.
+    logo: z.string().optional(),
     // primy-vliv a spolupracujici odpovídají dvěma skupinám v podkladu,
     // partner-projektu je organizace, která v podkladu figuruje jen u konkrétního projektu.
     skupina: z.enum(['primy-vliv', 'spolupracujici', 'partner-projektu']),

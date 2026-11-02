@@ -1,4 +1,132 @@
 ---
-import Pripravujeme from '../components/Pripravujeme.astro';
+// Přehled zapojených institucí ve dvou skupinách. Partneři jednotlivých projektů se zde nezobrazují.
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Zaklad from '../layouts/Zaklad.astro';
+
+type Organizace = CollectionEntry<'organizace'>;
+
+const vsechny = (await getCollection('organizace')).sort(
+  (a, b) => a.data.poradi - b.data.poradi || a.data.nazev.localeCompare(b.data.nazev, 'cs'),
+);
+const skupiny = [
+  { id: 'primy-vliv', nazev: 'S přímým vlivem Pardubického kraje', barva: 'var(--cervena)', sloupcu: 4 },
+  { id: 'spolupracujici', nazev: 'Spolupracující s Pardubickým krajem', barva: 'var(--modra)', sloupcu: 5 },
+].map((s) => ({ ...s, organizace: vsechny.filter((o) => o.data.skupina === s.id) }));
+
+const nazevKarty = (o: Organizace) => o.data.kratky_nazev ?? o.data.zkratka ?? o.data.nazev;
 ---
-<Pripravujeme titulek="Zapojené instituce" faze="fáze 5" />
+<Zaklad titulek="Zapojené instituce" popis="Organizace, které se podílejí na přípravě a realizaci projektů Regionu příležitostí a budoucnosti.">
+  <div class="obal stranka">
+    <header class="uvod">
+      <h1>Zapojené instituce</h1>
+      <p class="perex">
+        Na přípravě a realizaci projektů se podílí široké spektrum partnerů, od krajských organizací po státní agentury.
+      </p>
+    </header>
+
+    {skupiny.map((s) => (
+      <section class="skupina" style={`--barva:${s.barva};--sloupcu:${s.sloupcu}`} aria-labelledby={`skupina-${s.id}`}>
+        <h2 id={`skupina-${s.id}`}>{s.nazev}</h2>
+        <ul class="mrizka">
+          {s.organizace.map((o) => (
+            <li class="karta">
+              <div class="logo">
+                {o.data.logo ? (
+                  <img src={`/loga/${o.data.logo}`} alt={`Logo ${o.data.nazev}`} loading="lazy" />
+                ) : (
+                  <span class="logo__text" aria-hidden="true">{o.data.zkratka ?? o.data.nazev}</span>
+                )}
+              </div>
+              <h3>{o.data.web ? <a href={o.data.web} rel="noopener">{nazevKarty(o)}</a> : nazevKarty(o)}</h3>
+              <p>{o.data.popisek ?? o.data.nazev}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Zaklad>
+
+<style>
+  .stranka {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding-block: clamp(48px, 6vw, 72px) clamp(56px, 7vw, 88px);
+  }
+
+  .uvod {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px 48px;
+  }
+  h1 { font-size: clamp(36px, 5vw, 64px); }
+  .perex { max-width: 460px; color: var(--text-perex); line-height: 1.55; }
+
+  .skupina { display: flex; flex-direction: column; gap: 20px; }
+  .skupina h2 {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: clamp(20px, 2.2vw, 24px);
+    letter-spacing: -0.02em;
+  }
+  .skupina h2::before {
+    content: '';
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--barva);
+  }
+
+  .mrizka {
+    display: grid;
+    grid-template-columns: repeat(var(--sloupcu), minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .karta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 18px 22px;
+    border-top: 3px solid var(--barva);
+    border-radius: var(--radius);
+    background: var(--bila);
+  }
+  .logo {
+    display: grid;
+    place-items: center;
+    height: 104px;
+    margin-bottom: 14px;
+    padding: 16px 20px;
+    border: 1px solid var(--ramecek);
+    border-radius: 6px;
+  }
+  .logo img {
+    max-width: 100%;
+    max-height: 64px;
+    object-fit: contain;
+  }
+  .logo__text { font: 800 24px/1 var(--font-titulky); font-stretch: 115%; }
+  .karta h3 { font-size: 18px; letter-spacing: -0.01em; line-height: 1.15; }
+  .karta h3 a:hover { color: var(--cervena); text-decoration: underline; }
+  .karta p { font-size: 14px; line-height: 1.4; color: var(--text-2); }
+
+  @media (max-width: 1100px) {
+    .mrizka { grid-template-columns: repeat(min(var(--sloupcu), 3), minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .mrizka { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .karta { padding: 14px 14px 18px; }
+    .logo { height: 84px; padding: 12px; }
+    .logo img { max-height: 52px; }
+    .karta h3 { font-size: 16px; }
+  }
+</style>

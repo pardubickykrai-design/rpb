@@ -1,6 +1,8 @@
 ---
 nazev: "Destinační společnost Východní Čechy"
 zkratka: "DSVČ"
+popisek: "Destinační společnost Východní Čechy"
+logo: "dsvc.png"
 skupina: "primy-vliv"
 poradi: 40
 ---

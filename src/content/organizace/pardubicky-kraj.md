@@ -1,6 +1,8 @@
 ---
 nazev: "Pardubický kraj a Krajský úřad Pardubického kraje"
 zkratka: "Pardubický kraj"
+popisek: "Pardubický kraj a krajský úřad"
+logo: "pardubicky-kraj.png"
 skupina: "primy-vliv"
 poradi: 10
 ---

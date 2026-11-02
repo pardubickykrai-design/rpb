@@ -1,6 +1,8 @@
 ---
 nazev: "Teritoriální pakt zaměstnanosti Pardubického kraje"
 zkratka: "TPZ PK"
+popisek: "Teritoriální pakt zaměstnanosti PK"
+logo: "tpz-pk.png"
 skupina: "primy-vliv"
 poradi: 70
 ---

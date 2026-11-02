@@ -1,6 +1,8 @@
 ---
 nazev: "Agentura pro podnikání a inovace"
 zkratka: "API"
+popisek: "Agentura pro podnikání a inovace"
+logo: "api.png"
 skupina: "spolupracujici"
 poradi: 180
 ---

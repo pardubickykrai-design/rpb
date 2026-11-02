@@ -1,5 +1,7 @@
 ---
 nazev: "CzechTrade"
+popisek: "Podpora exportu"
+logo: "czechtrade.png"
 skupina: "spolupracujici"
 poradi: 130
 ---

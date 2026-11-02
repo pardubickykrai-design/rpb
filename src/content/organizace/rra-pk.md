@@ -1,6 +1,8 @@
 ---
 nazev: "Regionální rozvojová agentura Pardubického kraje"
 zkratka: "RRA PK"
+popisek: "Regionální rozvojová agentura Pardubického kraje"
+logo: "rra-pk.png"
 skupina: "primy-vliv"
 poradi: 20
 ---

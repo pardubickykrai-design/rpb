@@ -1,6 +1,9 @@
 ---
 nazev: "Univerzita Pardubice a Centrum transferu technologií a znalostí"
 zkratka: "UPCE"
+kratky_nazev: "Univerzita Pardubice"
+popisek: "vč. Centra transferu technologií a znalostí"
+logo: "univerzita-pardubice.png"
 skupina: "spolupracujici"
 poradi: 90
 ---

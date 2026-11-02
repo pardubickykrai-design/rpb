@@ -1,6 +1,8 @@
 ---
 nazev: "Technologická agentura České republiky"
 zkratka: "TA ČR"
+popisek: "Technologická agentura ČR"
+logo: "tacr.png"
 skupina: "spolupracujici"
 poradi: 170
 ---

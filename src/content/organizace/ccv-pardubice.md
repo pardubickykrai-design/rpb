@@ -1,6 +1,8 @@
 ---
 nazev: "Centrum celoživotního vzdělávání Pardubice"
 zkratka: "CCV Pardubice"
+popisek: "Centrum celoživotního vzdělávání PK"
+logo: "ccv-pardubice.png"
 skupina: "primy-vliv"
 poradi: 50
 ---

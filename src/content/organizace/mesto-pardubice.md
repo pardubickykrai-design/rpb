@@ -1,5 +1,8 @@
 ---
 nazev: "Statutární město Pardubice"
+kratky_nazev: "Město Pardubice"
+popisek: "Odbor rozvoje a strategie"
+logo: "mesto-pardubice.png"
 skupina: "spolupracujici"
 poradi: 110
 ---

@@ -1,6 +1,8 @@
 ---
 nazev: "Institut environmentálních výzkumů a aplikací"
 zkratka: "IEVA"
+popisek: "Institut environmentálních výzkumů a aplikací"
+logo: "ieva.png"
 skupina: "primy-vliv"
 poradi: 60
 ---

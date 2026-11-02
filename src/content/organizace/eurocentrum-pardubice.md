@@ -1,5 +1,8 @@
 ---
 nazev: "Eurocentrum Pardubice"
+kratky_nazev: "Eurocentrum"
+popisek: "Europe Direct Pardubice"
+logo: "eurocentrum-pardubice.png"
 skupina: "spolupracujici"
 poradi: 150
 ---

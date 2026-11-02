@@ -1,5 +1,8 @@
 ---
 nazev: "East Bohemian Airport a.s."
+kratky_nazev: "East Bohemian Airport"
+popisek: "Letiště Pardubice"
+logo: "east-bohemian-airport.png"
 skupina: "primy-vliv"
 poradi: 80
 ---
